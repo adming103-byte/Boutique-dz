@@ -1,118 +1,82 @@
-export type Dictionary = {
-  dir: "rtl" | "ltr";
+"use client";
 
-  nav: {
-    home: string;
-    categories: string;
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+
+import { dictionaries } from "../dictionaries";
+import type { Locale } from "../types";
+
+type Dictionary = (typeof dictionaries)[keyof typeof dictionaries];
+
+interface LanguageContextValue {
+  locale: Locale;
+  dict: Dictionary;
+  setLocale: (locale: Locale) => void;
+}
+
+const LanguageContext = createContext<LanguageContextValue | undefined>(
+  undefined
+);
+
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+export function LanguageProvider({
+  children,
+}: LanguageProviderProps) {
+  const [locale, setLocaleState] = useState<Locale>("ar");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("dz-locale");
+
+    if (saved === "ar" || saved === "fr" || saved === "en") {
+      setLocaleState(saved);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+
+    const dir = locale === "ar" ? "rtl" : "ltr";
+    document.documentElement.dir = dir;
+  }, [locale]);
+
+  function setLocale(newLocale: Locale) {
+    setLocaleState(newLocale);
+    window.localStorage.setItem("dz-locale", newLocale);
+
+    document.documentElement.lang = newLocale;
+    document.documentElement.dir =
+      newLocale === "ar" ? "rtl" : "ltr";
+  }
+
+  const value: LanguageContextValue = {
+    locale,
+    dict: dictionaries[locale],
+    setLocale,
   };
 
-  hero: {
-    cta: string;
-  };
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
 
-  // ... باقي الخصائص
-};
+export function useLanguage(): LanguageContextValue {
+  const ctx = useContext(LanguageContext);
 
-export const dictionaries: Record<"ar" | "fr", Dictionary> = {
-  ar: {
-    dir: "rtl",
+  if (!ctx) {
+    throw new Error(
+      "useLanguage must be used inside LanguageProvider"
+    );
+  }
 
-    nav: {
-      home: "الرئيسية",
-      categories: "التصنيفات",
-    },
-
-    // ...
-  },
-
-  fr: {
-    dir: "ltr",
-
-    nav: {
-      home: "Accueil",
-      categories: "Catégories",
-    },
-
-    // ...
-  },export type Dictionary = {
-  dir: "rtl" | "ltr";
-
-  nav: {
-    home: string;
-    categories: string;
-  };
-
-  hero: {
-    cta: string;
-  };
-
-  sections: {
-    new: string;
-    bestseller: string;
-  };
-
-  trust: {
-    delivery: string;
-    cod: string;
-    exchange: string;
-    secure: string;
-    support: string;
-  };
-
-  product: {
-    addToCart: string;
-    buyNow: string;
-    outOfStock: string;
-    inStock: string;
-    quantity: string;
-    color: string;
-    size: string;
-    description: string;
-    specs: string;
-    reviews: string;
-    related: string;
-    askWhatsapp: string;
-  };
-
-  cart: {
-    title: string;
-    empty: string;
-    subtotal: string;
-    delivery: string;
-    total: string;
-    checkout: string;
-    remove: string;
-    continueShopping: string;
-  };
-
-  checkout: {
-    title: string;
-    fullName: string;
-    phone: string;
-    wilaya: string;
-    commune: string;
-    address: string;
-    notes: string;
-    deliveryMethod: string;
-    home: string;
-    office: string;
-    payment: string;
-    cod: string;
-    submit: string;
-  };
-
-  confirmation: {
-    title: string;
-    orderNumber: string;
-    total: string;
-  };
-
-  search: {
-    placeholder: string;
-    filters: {
-      category: string;
-      price: string;
-    };
-  };
-};
-};
+  return ctx;
+}
