@@ -21,9 +21,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = locale;
-    document.documentElement.dir = dictionaries[locale].dir;
-  }, [locale]);
+  document.documentElement.lang = locale;
+  document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+}, [locale]);
 
   function setLocale(l: Locale) {
     setLocaleState(l);
