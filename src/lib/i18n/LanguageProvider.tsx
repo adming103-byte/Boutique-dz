@@ -1,44 +1,76 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { dictionaries } from "./dictionaries";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+
+import { dictionaries } from "../dictionaries";
 import type { Locale } from "../types";
 
 interface LanguageContextValue {
   locale: Locale;
   dict: typeof dictionaries["ar"];
-  setLocale: (l: Locale) => void;
+  setLocale: (locale: Locale) => void;
 }
 
-const LanguageContext = createContext<LanguageContextValue | null>(null);
+const LanguageContext = createContext<LanguageContextValue | undefined>(
+  undefined
+);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+export function LanguageProvider({
+  children,
+}: LanguageProviderProps) {
   const [locale, setLocaleState] = useState<Locale>("ar");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("dz-locale") as Locale | null;
-    if (saved === "ar" || saved === "fr") setLocaleState(saved);
+    const saved = window.localStorage.getItem("dz-locale");
+
+    if (saved === "ar" || saved === "fr") {
+      setLocaleState(saved);
+    }
   }, []);
 
   useEffect(() => {
-  document.documentElement.lang = locale;
-  document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
-}, [locale]);
+    document.documentElement.lang = locale;
 
-  function setLocale(l: Locale) {
-    setLocaleState(l);
-    window.localStorage.setItem("dz-locale", l);
+    document.documentElement.dir =
+      locale === "ar" ? "rtl" : "ltr";
+  }, [locale]);
+
+  function setLocale(newLocale: Locale) {
+    setLocaleState(newLocale);
+    window.localStorage.setItem("dz-locale", newLocale);
   }
 
+  const value: LanguageContextValue = {
+    locale,
+    dict: dictionaries[locale],
+    setLocale,
+  };
+
   return (
-    <LanguageContext.Provider value={{ locale, dict: dictionaries[locale], setLocale }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
 }
 
-export function useLanguage() {
+export function useLanguage(): LanguageContextValue {
   const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
+
+  if (!ctx) {
+    throw new Error(
+      "useLanguage must be used inside LanguageProvider"
+    );
+  }
+
   return ctx;
 }
