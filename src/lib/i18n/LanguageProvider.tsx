@@ -13,7 +13,7 @@ import type { Locale } from "../types";
 
 interface LanguageContextValue {
   locale: Locale;
-  dict: typeof dictionaries["ar"];
+  dict: (typeof dictionaries)[keyof typeof dictionaries];
   setLocale: (locale: Locale) => void;
 }
 
@@ -33,17 +33,14 @@ export function LanguageProvider({
   useEffect(() => {
     const saved = window.localStorage.getItem("dz-locale");
 
-    if (saved === "ar" || saved === "fr") {
-      setLocaleState(saved);
+    if (
+      saved === "ar" ||
+      saved === "fr" ||
+      saved === "en"
+    ) {
+      setLocaleState(saved as Locale);
     }
   }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = locale;
-
-    document.documentElement.dir =
-      locale === "ar" ? "rtl" : "ltr";
-  }, [locale]);
 
   function setLocale(newLocale: Locale) {
     setLocaleState(newLocale);
